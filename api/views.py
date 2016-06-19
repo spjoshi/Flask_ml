@@ -10,7 +10,7 @@ from flask import url_for
 from sklearn import metrics
 import matplotlib.pyplot as plt; plt.rcdefaults()
 import sklearn.cross_validation as cv
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
 
@@ -75,10 +75,7 @@ def index():
     #Save Fig
     fig_path = os.path.join(get_abs_path(), 'static', 'tmp', 'cluster.png')
     fig.savefig(fig_path)
-
     return render_template('index.html', fig = url_for('static', filename = 'tmp/cluster.png'))
-
-
 
 
 @app.route('/d3')
@@ -134,12 +131,13 @@ def prediction_confusion_matrix():
     X_train, X_test, y_train, y_test = cv.train_test_split(X, y, train_size=0.8, random_state=0)
 
     rfc = RandomForestClassifier(n_estimators=10, n_jobs=-1, bootstrap=True, warm_start=True, random_state=0)
-    rfc.fit(X_train, y_train)  # not the selected X and y because we want RForrest
+    rfc.fit(X_train, y_train)
     y_true = y_test
     y_pred = rfc.predict(X_test)
-    # print '\n\n\n======= Summary Metrics Random Forrest Classifier =============\n'
+
     # use confusion_matrix function from matrix module to calculate the specificity of the data
     confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
+
     # store the output of confusion matrix in appropriate variable
     TN = confusion_matrix[0, 0]
     FP = confusion_matrix[0, 1]
@@ -168,23 +166,21 @@ def prediction():
 
     X = df.ix[:, (df.columns != 'class') & (df.columns != 'code')].as_matrix()
     y = df.ix[:, df.columns =='class'].as_matrix()
-
+    # conversion to binary variable
     le = preprocessing.LabelEncoder()
     y = le.fit_transform(y.ravel())
 
     X_train, X_test, y_train, y_test = cv.train_test_split(X, y, train_size=0.8, random_state=0)
 
-    # print '\n\nCalculating parameters for Random Forrest, please wait .......'
-
     rfc = RandomForestClassifier(n_estimators=10, n_jobs=-1, bootstrap=True, warm_start=True, random_state=0)
-    rfc.fit(X_train, y_train)  # not the selected X and y because we want RForrest
+    rfc.fit(X_train, y_train)
     y_true = y_test
     y_pred = rfc.predict(X_test)
     y_score = rfc.predict_proba(X_test)
 
-    # print '\n\n\n======= Summary Metrics Random Forrest Classifier =============\n'
     # use confustion_matix function from matrix module to calculate the specificity of the data
     confusion_matrix = metrics.confusion_matrix(y_true, y_pred)
+
     # store the output of confusion matrix in appropriate variable
     TN = confusion_matrix[0, 0]
     FP = confusion_matrix[0, 1]
